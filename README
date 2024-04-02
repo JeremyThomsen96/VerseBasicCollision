@@ -9,3 +9,6 @@
 
 #Ensure you also grab the Utils file if you decide to give the jenky ray casting script a try
 
+#Material Visualization
+You'll have to setup your own mats to visualize it or just comment out all stuff pertaining to materials  
+
