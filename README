@@ -1,0 +1,11 @@
+#Blueprint Setup:
+  #When setting up your blueprints you must ensure that the mesh goes in the default static mesh component and that the scale on XYZ stays at 1. You can scale up and down after. so long as all (FOR SPHERES) the scale stays uniform (Cubes can be scaled however you like after setting up BP) 
+
+#Sphere Collision:
+  #You must know your Spheres Default Radius in cm's and Ensure the origin of the mesh is in the exact center, OR export blenders default UV Sphere which has a radius of 100cm by default
+
+#BOX Collision:
+  #In Order To use these scripts you must either know your cubes default dimesnsions in cm's for Length Width and Height, and Ensure the mesh's origin is in the exact center of the mesh. Or Export Blenders Default Cube
+
+#Ensure you also grab the Utils file if you decide to give the jenky ray casting script a try
+
