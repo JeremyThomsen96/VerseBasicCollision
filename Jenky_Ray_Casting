@@ -10,18 +10,18 @@ using { /Verse.org/Simulation/Tags }
 CollisionEventParams := class:
     _Prop1 : creative_prop
 
-Collidables := class(tag):
+Collidables := class(tag): #Props with this tag must be the same mesh with the same default dimensions as the prop you're spawning / casting forward
 
 Orb_Casting := class(creative_device):  #Jenky "Ray-ish" Casting
 
     CollisionEvent : event(CollisionEventParams) = event(CollisionEventParams){}
 
-    @editable CastObject : creative_prop_asset = DefaultCreativePropAsset
+    @editable CastObject : creative_prop_asset = DefaultCreativePropAsset   #Must Match the prop that has the collidable tag in terms of default Length, Width, and Height
 
     TouchingMat : material = Mat0.MI_Touching   #Only for visualization
     NotTouchingMat : material = Mat0.MI_Not_Touching    #Only for visualization
 
-    var _Collidables :[]creative_prop = array{}
+    var _Collidables :[]creative_prop = array{} #For Storing Valid Props With Tags
 
     @editable OrbCaster : input_trigger_device = input_trigger_device{}
 
@@ -32,8 +32,8 @@ Orb_Casting := class(creative_device):  #Jenky "Ray-ish" Casting
                 if(Prop.IsValid[]):
                     set _Collidables += array{Prop}
 
-        OrbCaster.PressedEvent.Subscribe(StageFortCharacter)
-        spawn{AwaitCollisionEvent()}
+        OrbCaster.PressedEvent.Subscribe(StageFortCharacter)    #Gets Fort Char From Agent and starts Casting Orb for that player
+        spawn{AwaitCollisionEvent()}    #Loop that awaits and handles collision events
 
     StageFortCharacter(Agent:agent):void=
         if(Character := Agent.GetFortCharacter[]):
@@ -41,7 +41,7 @@ Orb_Casting := class(creative_device):  #Jenky "Ray-ish" Casting
                 CastOrb(Character)
 
     CollisionLoop(Orb:creative_prop)<suspends>:void=
-        loop:
+        loop:   #This could be optimized. Could Maybe Grab the closest X amount of props before checking collision instead of all but this is fine for testing
             Sleep(0.1)
             for(Prop:_Collidables):
                 if(Orb.IsValid[]):
@@ -53,10 +53,10 @@ Orb_Casting := class(creative_device):  #Jenky "Ray-ish" Casting
 
     GetRadius(Prop:creative_prop):float= 
         if(Prop.IsValid[]):
-            DefaultRadius := 100.0
+            DefaultRadius := 100.0  #if you're not using blenders default UV Sphere you must know your mesh's default radius in cm and update this value here
             _Scale := Prop.GetTransform().Scale
-            AvgScale := (_Scale.X + _Scale.Y + _Scale.Z) / 3.0
-            Radius := DefaultRadius * AvgScale
+            AvgScale := (_Scale.X + _Scale.Y + _Scale.Z) / 3.0  #Scale Must Be Uniform on all axes
+            Radius := DefaultRadius * AvgScale  #Scale Will Alter the overall radius
             return Radius
         return 100.0
 
@@ -77,7 +77,7 @@ Orb_Casting := class(creative_device):  #Jenky "Ray-ish" Casting
                 #Print("Objects Colliding")
                 Sphere_A.SetMaterial(TouchingMat)  #Only for visualization
                 Sphere_B.SetMaterial(TouchingMat)  #Only for visualization
-                CollisionEvent.Signal(CollisionEventParams{_Prop1 := Sphere_A}) #, _Prop2 := Sphere_B
+                CollisionEvent.Signal(CollisionEventParams{_Prop1 := Sphere_A}) # Passes the spawned orb that collided for disposal
                 return true
             #Print("Objects Do Not Collide")
             Sphere_A.SetMaterial(NotTouchingMat)   #Only for visualization
@@ -99,7 +99,7 @@ Orb_Casting := class(creative_device):  #Jenky "Ray-ish" Casting
             then:
                 if(Prop.IsValid[]):
                     spawn:
-                        CollisionLoop(Prop)
+                        CollisionLoop(Prop) #Check Collision for this this spawned orb
                 loop:
                     if(DistanceTraveled >= 25000.0):
                         break
@@ -107,15 +107,15 @@ Orb_Casting := class(creative_device):  #Jenky "Ray-ish" Casting
                     if(Prop.IsValid[]):
                         LocalForwardDirection := Prop.GetTransform().Rotation.GetLocalForward() #0 - 1 range
                         NormalizedLocalForward := Normalize(LocalForwardDirection) # -1 to 1 range
-                        NormalizedPitch := NormalizePitch(Pitch)
-                        TravelDist := 500.0 #cm to increment the orb by
-                        X_Offset := NormalizedLocalForward.X * TravelDist
+                        NormalizedPitch := NormalizePitch(Pitch) # for getting a good height offset
+                        TravelDist := 100.0 #cm to increment the orb by
+                        X_Offset := NormalizedLocalForward.X * TravelDist   # gets the normalized new directions to be a sizable number for offsetting the last translation
                         Y_Offset := NormalizedLocalForward.Y * TravelDist
                         Z_Offset := NormalizedPitch * TravelDist
-                        TargetLocation := vector3{X := Prop.GetTransform().Translation.X + X_Offset, Y := Prop.GetTransform().Translation.Y + Y_Offset, Z := Prop.GetTransform().Translation.Z + Z_Offset}
+                        TargetLocation := vector3{X := Prop.GetTransform().Translation.X + X_Offset, Y := Prop.GetTransform().Translation.Y + Y_Offset, Z := Prop.GetTransform().Translation.Z + Z_Offset}  #Add Offsets For Casting Forward
                         if(Prop.IsValid[]):
-                            Prop.MoveTo(TargetLocation, Prop.GetTransform().Rotation, 0.05)
-                            set DistanceTraveled += 500.0
+                            Prop.MoveTo(TargetLocation, Prop.GetTransform().Rotation, 0.02)
+                            set DistanceTraveled += 100.0
                         else:
                             break
                     else:
