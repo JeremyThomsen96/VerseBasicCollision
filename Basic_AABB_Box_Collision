@@ -23,7 +23,7 @@ Box_Collision := class(creative_device):
 
     MoveBoxLoop(Box:creative_prop, Offset:float)<suspends>:void=
         InitLoc := Box.GetTransform().Translation
-        PlainRot : vector3 = vector3{X := 0.0,  Y := 0.0, Z := 90.0}
+        PlainRot : vector3 = vector3{X := 0.0,  Y := 0.0, Z := 0.0}
         Rotation := MakeRotationFromYawPitchRollDegrees(PlainRot.X, PlainRot.Y, PlainRot.Z)
         PointB := vector3:
             X := InitLoc.X
