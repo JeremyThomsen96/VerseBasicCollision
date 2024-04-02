@@ -48,8 +48,8 @@ Box_Collision := class(creative_device):
         DefaultLWH := 200.0
         Scale := Prop.GetTransform().Scale
         Location := Prop.GetTransform().Translation
-        MinX := Location.X - ((Scale.X * DefaultLWH) / 2.0)  #This is assuming the cubes origin is in the center of the mesh and you used blenders default cube which is 200cm in L, W, and H
-        MinY := Location.Y - ((Scale.Y * DefaultLWH) / 2.0)
+        MinX := Location.X - ((Scale.X * DefaultLWH) / 2.0)  #This is assuming the cubes origin is in the center of the mesh and you used blenders default cube which is 200cm in L, W, and H 
+        MinY := Location.Y - ((Scale.Y * DefaultLWH) / 2.0)    #if your cube does not have a default LWH of 200cm you must adjust or create extra params for those
         MinZ := Location.Z - ((Scale.Z * DefaultLWH) / 2.0)
         Min_V3 := vector3{X := MinX, Y := MinY, Z := MinZ}
         return Min_V3
@@ -59,7 +59,7 @@ Box_Collision := class(creative_device):
         Scale := Prop.GetTransform().Scale
         Location := Prop.GetTransform().Translation
         MaxX := Location.X + ((Scale.X * DefaultLWH) / 2.0) #This is assuming the cubes origin is in the center of the mesh and you used blenders default cube which is 200cm in L, W, and H
-        MaxY := Location.Y + ((Scale.Y * DefaultLWH) / 2.0)
+        MaxY := Location.Y + ((Scale.Y * DefaultLWH) / 2.0)    #if your cube does not have a default LWH of 200cm you must adjust or create extra params for those
         MaxZ := Location.Z + ((Scale.Z * DefaultLWH) / 2.0)
         Max_V3 := vector3{X := MaxX, Y := MaxY, Z := MaxZ}
         return Max_V3
