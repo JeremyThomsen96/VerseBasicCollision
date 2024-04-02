@@ -108,14 +108,14 @@ Orb_Casting := class(creative_device):  #Jenky "Ray-ish" Casting
                         LocalForwardDirection := Prop.GetTransform().Rotation.GetLocalForward() #0 - 1 range
                         NormalizedLocalForward := Normalize(LocalForwardDirection) # -1 to 1 range  | Normalize Function & Magnitude Function can be found in "Utils"
                         NormalizedPitch := NormalizePitch(Pitch) # for getting a good height offset | NormalizePitch Function can be found in "Utils"
-                        TravelDist := 100.0 #cm to increment the orb by | Play with distance and MoveTo Speed to fit your use case
+                        TravelDist := 400.0 #cm to increment the orb by | Play with distance and MoveTo Speed to fit your use case
                         X_Offset := NormalizedLocalForward.X * TravelDist   # gets the normalized new directions to be a sizable number for offsetting the last translation
                         Y_Offset := NormalizedLocalForward.Y * TravelDist
                         Z_Offset := NormalizedPitch * TravelDist
                         TargetLocation := vector3{X := Prop.GetTransform().Translation.X + X_Offset, Y := Prop.GetTransform().Translation.Y + Y_Offset, Z := Prop.GetTransform().Translation.Z + Z_Offset}  #Add Offsets For Casting Forward
                         if(Prop.IsValid[]):
-                            Prop.MoveTo(TargetLocation, Prop.GetTransform().Rotation, 0.02)
-                            set DistanceTraveled += 100.0
+                            Prop.MoveTo(TargetLocation, Prop.GetTransform().Rotation, 0.1)
+                            set DistanceTraveled += TravelDist
                         else:
                             break
                     else:
