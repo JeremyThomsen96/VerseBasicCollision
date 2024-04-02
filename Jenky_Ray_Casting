@@ -1,0 +1,124 @@
+
+using { /Fortnite.com/Devices }
+using { /Verse.org/Simulation }
+using { /UnrealEngine.com/Temporary/Diagnostics }
+using { /Verse.org/Assets }
+using { /UnrealEngine.com/Temporary/SpatialMath }
+using { /Fortnite.com/Characters }
+using { /Verse.org/Simulation/Tags }
+
+CollisionEventParams := class:
+    _Prop1 : creative_prop
+
+Collidables := class(tag):
+
+Orb_Casting := class(creative_device):  #Jenky "Ray-ish" Casting
+
+    CollisionEvent : event(CollisionEventParams) = event(CollisionEventParams){}
+
+    @editable CastObject : creative_prop_asset = DefaultCreativePropAsset
+
+    TouchingMat : material = Mat0.MI_Touching   #Only for visualization
+    NotTouchingMat : material = Mat0.MI_Not_Touching    #Only for visualization
+
+    var _Collidables :[]creative_prop = array{}
+
+    @editable OrbCaster : input_trigger_device = input_trigger_device{}
+
+    OnBegin<override>()<suspends>:void=
+        Collidable_Objects := GetCreativeObjectsWithTag(Collidables{})
+        for(Item : Collidable_Objects):
+            if(Prop := creative_prop[Item]):
+                if(Prop.IsValid[]):
+                    set _Collidables += array{Prop}
+
+        OrbCaster.PressedEvent.Subscribe(StageFortCharacter)
+        spawn{AwaitCollisionEvent()}
+
+    StageFortCharacter(Agent:agent):void=
+        if(Character := Agent.GetFortCharacter[]):
+            spawn:
+                CastOrb(Character)
+
+    CollisionLoop(Orb:creative_prop)<suspends>:void=
+        loop:
+            Sleep(0.1)
+            for(Prop:_Collidables):
+                if(Orb.IsValid[]):
+                    if(Prop.IsValid[]):
+                        HasCollided := IsColliding(Orb, Prop)
+                        if(HasCollided = true):
+                            Sleep(5.0)
+                            break
+
+    GetRadius(Prop:creative_prop):float= 
+        if(Prop.IsValid[]):
+            DefaultRadius := 100.0
+            _Scale := Prop.GetTransform().Scale
+            AvgScale := (_Scale.X + _Scale.Y + _Scale.Z) / 3.0
+            Radius := DefaultRadius * AvgScale
+            return Radius
+        return 100.0
+
+    AwaitCollisionEvent()<suspends>:void=
+        loop:
+            Task := CollisionEvent.Await()
+            Print("Signal Recieved")
+            Prop := Task._Prop1
+            if(Prop.IsValid[]):
+                Prop.Dispose()
+
+    IsColliding(Sphere_A:creative_prop, Sphere_B:creative_prop):logic=
+        Prop1Radius := GetRadius(Sphere_A)
+        Prop2Radius := GetRadius(Sphere_B)
+        if(Sphere_A.IsValid[] and Sphere_B.IsValid[]):
+            Dist := Distance(Sphere_A.GetTransform().Translation, Sphere_B.GetTransform().Translation)
+            if( Dist < (Prop1Radius + Prop2Radius) ):
+                #Print("Objects Colliding")
+                Sphere_A.SetMaterial(TouchingMat)  #Only for visualization
+                Sphere_B.SetMaterial(TouchingMat)  #Only for visualization
+                CollisionEvent.Signal(CollisionEventParams{_Prop1 := Sphere_A}) #, _Prop2 := Sphere_B
+                return true
+            #Print("Objects Do Not Collide")
+            Sphere_A.SetMaterial(NotTouchingMat)   #Only for visualization
+            Sphere_B.SetMaterial(NotTouchingMat)   #Only for visualization
+        else:
+            Print("Not Valid")
+        return false
+
+    CastOrb(Character:fort_character)<suspends>:void=
+        var DistanceTraveled : float = 0.0
+        InitialLocation := Character.GetTransform().Translation
+        InitialRotation := Character.GetViewRotation()
+        YPR := InitialRotation.GetYawPitchRollDegrees()
+        if(Pitch := YPR[1]):
+            if:
+                Prop := SpawnProp(CastObject, InitialLocation, IdentityRotation())(0)?
+                Prop.IsValid[]
+                Prop.TeleportTo[InitialLocation, InitialRotation]
+            then:
+                if(Prop.IsValid[]):
+                    spawn:
+                        CollisionLoop(Prop)
+                loop:
+                    if(DistanceTraveled >= 25000.0):
+                        break
+                    Sleep(0.01)
+                    if(Prop.IsValid[]):
+                        LocalForwardDirection := Prop.GetTransform().Rotation.GetLocalForward() #0 - 1 range
+                        NormalizedLocalForward := Normalize(LocalForwardDirection) # -1 to 1 range
+                        NormalizedPitch := NormalizePitch(Pitch)
+                        TravelDist := 500.0 #cm to increment the orb by
+                        X_Offset := NormalizedLocalForward.X * TravelDist
+                        Y_Offset := NormalizedLocalForward.Y * TravelDist
+                        Z_Offset := NormalizedPitch * TravelDist
+                        TargetLocation := vector3{X := Prop.GetTransform().Translation.X + X_Offset, Y := Prop.GetTransform().Translation.Y + Y_Offset, Z := Prop.GetTransform().Translation.Z + Z_Offset}
+                        if(Prop.IsValid[]):
+                            Prop.MoveTo(TargetLocation, Prop.GetTransform().Rotation, 0.05)
+                            set DistanceTraveled += 500.0
+                        else:
+                            break
+                    else:
+                        break
+                if(Prop.IsValid[]):
+                    Prop.Dispose()
