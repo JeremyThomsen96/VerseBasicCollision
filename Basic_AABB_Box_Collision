@@ -1,0 +1,78 @@
+
+using { /Fortnite.com/Devices }
+using { /Verse.org/Simulation }
+using { /UnrealEngine.com/Temporary/Diagnostics }
+using { /UnrealEngine.com/Temporary/SpatialMath }
+using { /Verse.org/Assets }
+
+Box_Collision := class(creative_device):
+
+    @editable BoxA : creative_prop = creative_prop{}
+    @editable BoxB : creative_prop = creative_prop{}
+
+    MTouching : material = Mat0.MI_Box_Touching
+    M_Not_Touching : material = Mat0.MI_Box_Not_Touching
+    
+    OnBegin<override>()<suspends>:void=
+        spawn:
+            CollisionLoop(BoxA, BoxB)
+        spawn:
+            MoveBoxLoop(BoxA, -500.0)
+        spawn:
+            MoveBoxLoop(BoxB, 500.0)
+
+    MoveBoxLoop(Box:creative_prop, Offset:float)<suspends>:void=
+        InitLoc := Box.GetTransform().Translation
+        PlainRot : vector3 = vector3{X := 0.0,  Y := 0.0, Z := 90.0}
+        Rotation := MakeRotationFromYawPitchRollDegrees(PlainRot.X, PlainRot.Y, PlainRot.Z)
+        PointB := vector3:
+            X := InitLoc.X
+            Y := InitLoc.Y + Offset
+            Z := InitLoc.Z
+        loop:
+            Box.MoveTo(PointB, Rotation, 8.0)
+            Box.MoveTo(InitLoc, Rotation, 8.0)
+        
+    CollisionLoop(Box_A:creative_prop, Box_B:creative_prop)<suspends>:void=
+        loop:
+            Sleep(0.1)
+            HasCollided := IsColliding(Box_A, Box_B)
+            if(HasCollided = true):
+                BoxA.SetMaterial(MTouching)
+                BoxB.SetMaterial(MTouching)
+            else if(HasCollided = false):
+                BoxA.SetMaterial(M_Not_Touching)
+                BoxB.SetMaterial(M_Not_Touching)
+
+    GetMin(Prop:creative_prop):vector3=
+        DefaultLWH := 200.0
+        Scale := Prop.GetTransform().Scale
+        Location := Prop.GetTransform().Translation
+        MinX := Location.X - ((Scale.X * DefaultLWH) / 2.0)  #This is assuming the cubes origin is in the center of the mesh and you used blenders default cube which is 200cm in L, W, and H
+        MinY := Location.Y - ((Scale.Y * DefaultLWH) / 2.0)
+        MinZ := Location.Z - ((Scale.Z * DefaultLWH) / 2.0)
+        Min_V3 := vector3{X := MinX, Y := MinY, Z := MinZ}
+        return Min_V3
+
+    GetMax(Prop:creative_prop):vector3=
+        DefaultLWH := 200.0
+        Scale := Prop.GetTransform().Scale
+        Location := Prop.GetTransform().Translation
+        MaxX := Location.X + ((Scale.X * DefaultLWH) / 2.0) #This is assuming the cubes origin is in the center of the mesh and you used blenders default cube which is 200cm in L, W, and H
+        MaxY := Location.Y + ((Scale.Y * DefaultLWH) / 2.0)
+        MaxZ := Location.Z + ((Scale.Z * DefaultLWH) / 2.0)
+        Max_V3 := vector3{X := MaxX, Y := MaxY, Z := MaxZ}
+        return Max_V3
+
+    IsColliding(Box_A:creative_prop, Box_B:creative_prop):logic= 
+        BoxAMin := GetMin(Box_A)
+        BoxAMax := GetMax(Box_A)
+        BoxBMin := GetMin(Box_B)
+        BoxBMax := GetMax(Box_B)
+        if(BoxAMax.X < BoxBMin.X or BoxAMin.X > BoxBMax.X):
+            return false
+        if(BoxAMax.Y < BoxBMin.Y or BoxAMin.Y > BoxBMax.Y):
+            return false
+        if(BoxAMax.Z < BoxBMin.Z or BoxAMin.Z > BoxBMax.Z):
+            return false
+        return true
