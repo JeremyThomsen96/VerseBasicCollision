@@ -88,20 +88,20 @@ Orb_Casting := class(creative_device):  #Jenky "Ray-ish" Casting
 
     CastOrb(Character:fort_character)<suspends>:void=
         var DistanceTraveled : float = 0.0
-        InitialLocation := Character.GetTransform().Translation
+        InitialLocation := Character.GetTransform().Translation #init loc for spawning orb to cast
         InitialRotation := Character.GetViewRotation()
         YPR := InitialRotation.GetYawPitchRollDegrees()
-        if(Pitch := YPR[1]):
+        if(Pitch := YPR[1]):    #Get Pitch For Future Offset / Calculating a new Z height when casting
             if:
                 Prop := SpawnProp(CastObject, InitialLocation, IdentityRotation())(0)?
                 Prop.IsValid[]
-                Prop.TeleportTo[InitialLocation, InitialRotation]
+                Prop.TeleportTo[InitialLocation, InitialRotation]   #Prob don't need this
             then:
                 if(Prop.IsValid[]):
                     spawn:
                         CollisionLoop(Prop) #Check Collision for this this spawned orb
                 loop:
-                    if(DistanceTraveled >= 25000.0):
+                    if(DistanceTraveled >= 25000.0):    #max distance orb can travel before being disposed. 
                         break
                     Sleep(0.01)
                     if(Prop.IsValid[]):
