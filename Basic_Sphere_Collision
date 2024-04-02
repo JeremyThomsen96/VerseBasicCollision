@@ -1,0 +1,65 @@
+using { /Fortnite.com/Devices }
+using { /Verse.org/Simulation }
+using { /UnrealEngine.com/Temporary/SpatialMath }
+using { /Verse.org/Assets }
+
+#This is for beginners trying to learn or anyone who is curious
+
+Basic_Sphere_Collision := class(creative_device):
+
+    @editable SphereA : creative_prop = creative_prop{} 
+    @editable SphereB : creative_prop = creative_prop{} 
+
+    TouchingMat : material = Mat0.MI_Touching   #Only for visualization
+    NotTouchingMat : material = Mat0.MI_Not_Touching    #Only for visualization
+
+    OnBegin<override>()<suspends>:void=
+        spawn{Move_Prop(SphereA, -500.0)}
+        spawn{Move_Prop(SphereB, 500.0)}
+        spawn{CollisionLoop(SphereA, SphereB)}
+
+    CollisionLoop(Prop1:creative_prop, Prop2:creative_prop)<suspends>:void=
+        loop:   
+            Sleep(0.1) #Runs Collision Check 10 times a second 
+            Collided := IsColliding(Prop1, Prop2)
+            if(Collided = true):
+            #you could make an event that signals when objects collide with params to pass what objects collided
+                
+    GetRadius(Prop:creative_prop):float= #Get Radius From Scale
+        
+        #assuming the default radius of the sphere is 100cm and the object origin is the center of the sphere   | VERY VERY VERY IMPORTANT. The Default Radius must be accurate for this to work
+        #Blenders UV Sphere has a default Radius of 100cm and and it's origin is in the center of the sphere which is what i'm using here
+
+        DefaultRadius := 100.0 #Default Units are measures in cm in unreal
+        _Scale := Prop.GetTransform().Scale
+        AvgScale := (_Scale.X + _Scale.Y + _Scale.Z) / 3.0  #This is will be inaccurate if the scale is not unifrom on all axes 
+        Radius := DefaultRadius * AvgScale
+        return Radius
+
+    IsColliding(Sphere_A:creative_prop, Sphere_B:creative_prop):logic=    #The set material functions in here are just for visualization, you're really just looking for a true or false
+
+        #You Detect Sphere Collision With 4 Metrics
+        #The Center Position of Sphere A and Sphere B, and the Radii of Sphere A and Spehre B
+        #All you do is check if the distance between Sphere A's Center and Sphere B's Center is less than the combined radii of the two spheres
+
+        Prop1Radius := GetRadius(Sphere_A)
+        Prop2Radius := GetRadius(Sphere_B)
+        Dist := Distance(Sphere_A.GetTransform().Translation, Sphere_B.GetTransform().Translation)
+        if( Dist < (Prop1Radius + Prop2Radius) ):
+            #Print("Objects Colliding")
+            Sphere_A.SetMaterial(TouchingMat)  #Only for visualization
+            Sphere_B.SetMaterial(TouchingMat)  #Only for visualization
+            return true
+        #Print("Objects Do Not Collide")
+        Sphere_A.SetMaterial(NotTouchingMat)   #Only for visualization
+        Sphere_B.SetMaterial(NotTouchingMat)   #Only for visualization
+        return false
+
+    Move_Prop(Prop:creative_prop, Offset:float)<suspends>:void= #Moves a prop from Point to Point on the y axis forever | #This is also just for testing you do not need this
+        PlainRotation := vector3{X := 0.0, Y := 0.0, Z := 0.0}
+        Rotation := MakeRotationFromYawPitchRollDegrees(PlainRotation.X, PlainRotation.Y, PlainRotation.Z)
+        InitLoc := Prop.GetTransform().Translation
+        PointB := vector3{X := InitLoc.X, Y := InitLoc.Y + Offset,Z := InitLoc.Z}
+        loop:
+            Prop.MoveTo(PointB, Rotation, 3.0)
+            Prop.MoveTo(InitLoc, Rotation, 3.0)
