@@ -7,14 +7,14 @@ using { /UnrealEngine.com/Temporary/SpatialMath }
 using { /Fortnite.com/Characters }
 using { /Verse.org/Simulation/Tags }
 
-CollisionEventParams := class:
+CollisionEventParams := class:  #For Passing / Disposing Spawned Prop Used For Casting
     _Prop1 : creative_prop
 
 Collidables := class(tag): #Props with this tag must be the same mesh with the same default dimensions as the prop you're spawning / casting forward
 
 Orb_Casting := class(creative_device):  #Jenky "Ray-ish" Casting
 
-    CollisionEvent : event(CollisionEventParams) = event(CollisionEventParams){}
+    CollisionEvent : event(CollisionEventParams) = event(CollisionEventParams){}    #Signaled when collision is detected and passes prop for disposal
 
     @editable CastObject : creative_prop_asset = DefaultCreativePropAsset   #Must Match the prop that has the collidable tag in terms of default Length, Width, and Height
 
