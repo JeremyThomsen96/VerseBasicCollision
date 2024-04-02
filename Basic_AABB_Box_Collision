@@ -5,7 +5,7 @@ using { /UnrealEngine.com/Temporary/Diagnostics }
 using { /UnrealEngine.com/Temporary/SpatialMath }
 using { /Verse.org/Assets }
 
-Box_Collision := class(creative_device):
+Box_Collision := class(creative_device):    #Axis-Aligned Bounding Box
 
     @editable BoxA : creative_prop = creative_prop{}
     @editable BoxB : creative_prop = creative_prop{}
