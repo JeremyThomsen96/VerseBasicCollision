@@ -1,0 +1,39 @@
+using { /Fortnite.com/Devices }
+using { /UnrealEngine.com/Temporary/SpatialMath }
+
+Prop_And_Dist := struct:
+    _Prop : creative_prop
+    _Dist : float
+
+ComparePropDist(A:Prop_And_Dist, B:Prop_And_Dist)<computes>:int=
+    if(A._Dist < B._Dist) then - 1
+    else if(A._Dist > B._Dist) then 1
+    else 0
+
+CompareFloats(A : float, B : float)<computes>:int=
+    if(A < B) then -1
+    else if(A > B) then 1
+    else 0
+
+#Takes a Generic Array of any type | and A Function That Computes and returns an int
+Sort(Items : []t, Comparer : type{ _ (:t, :t) <computes> : int} where t : type)<computes> : []t = 
+    if (Items.Length > 1, Pivot := Items[Floor(Items.Length/2)]):
+        Left := for(Item : Items, Comparer(Item, Pivot) < 0) do Item 
+        Middle := for(Item : Items, Comparer(Item, Pivot) = 0) do Item
+        Right := for(Item : Items, Comparer(Item, Pivot) > 0) do Item
+        Sort(Left, Comparer) + Middle + Sort(Right, Comparer)
+    else:    
+        Items 
+        
+(Input:[]t where t:type).Reverse()<computes>:[]t=
+    for (Index -> Unused : Input, Element := Input[Input.Length - Index - 1]). Element
+
+Normalize(v1:vector3):vector3=
+    Mag := Magnitude(v1)
+    return vector3{X := v1.X/Mag, Y := v1.Y/Mag, Z:= v1.Z/Mag}
+
+Magnitude(v1:vector3):float=
+    return Sqrt(Pow(v1.X, 2.0) + Pow(v1.Y, 2.0) + Pow(v1.Z, 2.0))
+
+NormalizePitch(Pitch:float):float=
+    return Pitch / 90.0
